@@ -1,0 +1,269 @@
+# long-distance-tucan3g
+This is a suite for simulate long distance WiFi and WiMAX links with the simulator ns-3
+
+
+	ns-3 Extension for simulating WiFi/WiMAX Long Distance links 
+	-------------------------------------------------------------
+
+Table of Contents:
+------------------
+
+1) An overview
+2) About Tucan3G
+3) About the ns-3 scritps
+4) About the ns-3 patch
+5) About ns-3
+6) References
+
+1) An overview
+----------------
+
+This ns-3 kit has been developed for the TUCAN3G project in order to simulate and analyse the performance of long distance links based in WiMAX and WiFi(WiLD) technologies. Several basic scripts are provided in order to make easy the testing of these technologies for their use long distance links. In order to allow a reliable simulation, some changes have been made in the ns-3 modules, specifically in the applications, wifi and wimax modules. A patch with these changes also is provided. This kit has been developed for the ns-3.18 version since was the current version of the simulator when the kit was developed.
+
+2) About Tucan3G
+----------------
+
+TUCAN3G (http://www.ict-tucan3g.eu/) is an Specific Targeted Research Project (STREP) of the 7th Framework Programme of the European Commission. The goals of TUCAN3G are aligned with objective ICT-2011 10.3 "International Partnership building and support to dialogues". TUCAN3G is a consortium of 11 partners managed by UPC and technically coordinated by URJC.
+
+Recent years have witnessed a massive penetration of cellular telephony in developing countries. However, isolated rural areas (inhabited by low-income population) have generally been disregarded because classical access and backhaul technologies do not assure the return on investment. As communication is crucial in human development, finding innovative solutions to connect these areas is an utmost necessity. TUCAN3G proposes to study, from the twofold technological and socio-economical perspectives, the progressive introduction of mobile telephony and data services in isolated rural areas of developing countries, by taking advantage of new wireless technologies for the access network (based on 3G femtocells, and its evolution to 4G) in outdoor scenarios, as well as WiLD (WiFi for Long Distances)-WiMAX-VSAT heterogeneous backhauling. Those promise to be key in the development of inexpensive, sustainable, energy efficient, self-organized and long-term self-sufficient solutions that result in a profitable business case. The project also proposes the installation of a demonstration platform in the Peruvian jungle to verify the solution, enable the verification of business model hypothesis and results, and serve as a general showcase.
+
+
+2) About the ns-3 scripts
+-------------------------
+
+There are three scripts provided for analyse the performance of WiLD/WiMAX long distance point to point links. Each one has its own functionality and accept a specific set of input parameters. However they are thought to be a template for further and more complex simulations(as you will make sure watching the scripts structure) and they are open to changes.
+
+The three scripts attached are:
+
+*** basic-WiLD.cc ***
+
+*      +-----+				+------------+		*
+*      | AP  |      (<------------>)  	|    STA     |		*
+*      +-----+          		+------------+		*
+*      10.1.1.1          		   10.1.1.2		*
+
+This script simulate a WiFi Long Distance link (WiLD link) in a simple manner. It was developed for obtain throughput, latency, jitter and losses values when the link is working in the saturation point for different distances with a specific link configuration (MCS, Packet Size, Aggregation Threshold and AckTimeout Adjustment)
+
+The accepted parameters are:
+
+	--mcs:       Modulation and codification scheme used. Different values for MCS can be used, 
+		     from 0 to 15, which includes SISO and MIMO.
+	--pSize:     Fixed packet size used for the simulation in bytes. This value correspond to APP 
+		     level size. It is necessary to consider the protocol overhead since results are given at 
+		     MAC level.
+	--maxDist:   Maximum distance in meters to be tested. The script will test different distances 
+  		     until reach this distance.
+	--stepDist:  Step distance in meters to be tested. This parameter set the increase of distance
+		     added in each simulation. For example, if "maxDist=30000" and "stepDist=5000", 
+		     7 simultations will be performed at 5, 5005, 10005, 15005, 20005, 25005 and 30005 meters
+	--aggTh:     Aggregation threshold used. This will set up the level of aggregation present in 
+		     the WiLD link.
+	--ackOpt:    Adjust ackTimeout for normal behavior. If true, this option will adjust the AckTimeout
+		     optimally to get the maximum throughput in each distance. If false, the AckTimeout value
+		     defined in the standard will be used, with the corresponding drop of performance starting
+		     from a specific distance (usually 27 Km)[2]
+	--pcap:      Generate Pcap trace file. If true, generate a Pcap file.
+
+The following default values are used in this scripts:
+	Standard:		IEEE 802.11n
+	Frequency:		5 GHz
+	Bandwidth: 		20 MHz
+	Guard Interval: 	Long (800ns)
+	SlotTime:		Optimized according to [1]
+	Fragmentation:		Disabled
+	CTS/RTS:		Disabled
+	BlockAck:		Disabled
+	QoS:			EDCA not used, but available
+	Transport Protocol:	UDP
+	Propagation Model:	FixedRssLossModel and ConstantSpeedPropagationDelayModel
+	Bidirectional flows:	Yes
+
+Example of use:
+
+./waf --run "scratch/basic-WiLD --mcs=0 --pSize=1300 --maxDist=30000 --stepDist=5000 --aggTh=0 --ackOpt=false --pcap=false"
+
+In this experiment, results of throughput, latency, jitter and losses in the saturation point are given for different distances, from 0 Km to 30 Km in steps of 5 Km. The MCS used is 0, no aggregation is performed and the packet size at APP level is 1300 bytes. The ackOpt is no enabled, so a dramatic drop of the performance is expected at 27 Km. No pcap files are generated
+
+*** offered-load-WiLD.cc ***
+
+This script simulate a WiLD link varying the offered load in order to obtain throughput, latency, jitter and losses values under the saturation point. As before in "basic-WilD.cc", the scripts increase gradually the distance of the link. However this scripts also increase the load gradually in order to obtain interesting values for latency, jitter and losses below the saturation point. 
+
+*      +-----+				+------------+		*
+*      | AP  |      (<------------>)  	|    STA     |		*
+*      +-----+          		+------------+		*
+*      10.1.1.1          		   10.1.1.2		*
+
+The accepted parameters are:
+
+	--mcs:       Modulation and codification scheme used. Different values for MCS can be used, 
+		     from 0 to 15, which includes SISO and MIMO.
+	--pSize:     Fixed packet size used for the simulation in bytes. This value correspond to APP 
+		     level size. It is necessary to consider the protocol overhead since results are given at 
+		     MAC level.
+	--maxDist:   Maximum distance in meters to be tested. The script will test different distances 
+  		     until reach this distance.
+	--stepDist:  Step distance in meters to be tested. This parameter set the increase of distance
+		     added in each simulation. For example, if "maxDist=30000" and "stepDist=5000", 
+		     7 different distances will be considered: 5, 5005, 10005, 15005, 20005, 
+		     25005 and 30005 meters.
+	--aggTh:     Aggregation threshold used. This will set up the level of aggregation present in 
+		     the WiLD link.
+	--olRes:     Offered Load resolution. This parameter set the number of tests that will be performed
+		     at each distance. For example if olRes=5 for MCS 0, 5 test will be made at each distance
+		     with the following injected bidirectional data rates: 1300, 2600, 3900, 5200 and 6500 kbps
+		     at APP level.
+	--pcap:      Generate Pcap trace file. If true, generate a Pcap file.
+
+The following default values are used in this scripts:
+	Standard:		IEEE 802.11n
+	Frequency:		5 GHz
+	Bandwidth: 		20 MHz
+	Guard Interval: 	Long (800ns)
+	SlotTime:		Optimized according to [2]
+	Fragmentation:		Disabled
+	CTS/RTS:		Disabled
+	BlockAck:		Disabled
+	QoS:			EDCA not used, but available
+	Transport Protocol:	UDP
+	Propagation Model:	FixedRssLossModel and ConstantSpeedPropagationDelayModel
+	Bidirectional flows:	Yes
+	AckTimeout:		Adjusted to each distance
+
+Example of use:
+
+./waf --run "scratch/offered-load-WiLD --mcs=0 --pSize=1300 --maxDist=30000 --stepDist=5000 --aggTh=0 --olRes=10 --pcap=true"
+
+In this experiment, results of throughput, latency, jitter and losses for several points in the load curve are given. In this case, 10 load points equidistantly between 0 and the maximum physical rate of the specified MCS (for the case of MCS0, 6.5 Mbps [3] ) will be tested for each distance, from 0 Km to 30 Km in steps of 5 Km. The MCS used is 0, no aggregation is performed and the packet size at APP level is 1300 bytes. The ackOpt is enabled by default. 2 pcap files are generated for both AP and STA.
+
+
+
+*** basic-WiMAX.cc ***
+
+This script simulate a WiMAX Long Distance link in a simple manner. It was developed for obtain throughput and latency values when the link is working in the saturation point for different distances with a specific link configuration (Modulation, Packet Size, Frame Duration, Cyclic Prefix, Bandwidth)
+
+*      +-----+			+------------+
+*      | SS0 |   (<---------)   |Base Station|
+*      +-----+          	+------------+
+*      10.1.1.1                    10.1.1.2
+
+The accepted parameters are:
+
+	--mod:       Modulation and codification scheme used. Different modulation schemes can be used, 
+		     from BPSK1/2 to 64QAM3/4. Only SISO techniques are considered.
+	--frame:     Frame Duration used in seconds. The following frame duration are allowed:
+		     0.0025, 0.004, 0.005, 0.008, 0.010, 0.012 and 0.020 seconds.
+	--cp:	     Cyclic Prefix used. The following Cyclic Prefix are allowed:
+		     0.24, 0.125, 0.0625 and 0.03125.
+	--pSize:     Fixed packet size used for the simulation in bytes. This value correspond to APP 
+		     level size. It is necessary to consider the protocol overhead since results are given at 
+		     MAC level.
+	--bw:	     Bandwidth used in Hz. Only the standard [3] bandwidths for are allowed: 7 and 10 MH>
+		     for licensed bands and non-licensed bands respectively.
+	--pcap:      Generate Pcap trace file. If true, generate a Pcap file.
+
+The following default values are used in this scripts:
+	Standard:		IEEE 802.16e-2007 [3]
+	Frequency:		5 GHz
+	Distance:		8 Km
+	UL/DL:			0%
+	Scheduler:		Simple
+	RTG/TTG:		Distance dependant
+	Ranging:		Distance dependant
+	Fragmentation:		Disabled
+	WimaxMacQueue		1024
+	QoS:			Service Flow UGS
+	Transport Protocol:	UDP
+	Propagation Model:	Random Propagation
+	Bidirectional flows:	No
+
+Example of use:
+
+./waf --run "scratch/basic-WiMAX --mod=0 --frame=0.02 --cp=0.25 --pSize=1300 --bw=100000 --pcap=true"
+
+In this experiment, results of throughput and latency are given for the saturation state. The distance used is fixed to 8 Km. The modulation used is BPSK 1/2 (0), the frame duration is 20ms, the Cyclic Prefix is 1/4 and the packet size at APP level is 1300 bytes. The bandwidth considered is 10 MHz. 2 pcap files will be generated for both BS and SS.
+
+
+2) About the ns-3 patch
+-----------------------
+
+In order to execute these scripts properly some changes in ns-3.18 modules are needed. 
+
+
+Wifi Module (src/wifi)
+
+Originally in ns-3.18, IEEE 802.11n HT had no been totally implemented. In order to allow MIMO compliant MCSs, wifi-phy.cc has been modified in order to some PhyModes become the MCS 8-15 modulation and codification schemes. According to this the MCSs are mapped to the following PhyModes:
+
+			SISO
+
+		MCS0		        OfdmRate6_5MbpsBW20MHz
+		MCS1                    OfdmRate13MbpsBW20MHz
+		MCS2                    OfdmRate19_5MbpsBW20MHz
+		MCS3                    OfdmRate26MbpsBW20MHz
+		MCS4                    OfdmRate39MbpsBW20MHz
+		MCS5                    OfdmRate52MbpsBW20MHz
+		MCS6                    OfdmRate58_5MbpsBW20MHz
+		MCS7                    OfdmRate65MbpsBW20MHz
+
+			MIMO
+
+		MCS8                    OfdmRate13MbpsBW20MHz
+		MCS9                    OfdmRate26MbpsBW20MHz
+		MCS10                   OfdmRate39MbpsBW20MHz
+		MCS11                   OfdmRate52MbpsBW20MHz
+		MCS12                   OfdmRate1_5MbpsBW5MHz	 	//equivalent to 78Mbps
+		MCS13                   OfdmRate2_25MbpsBW5MHz	 	//equivalent to 104Mbps
+		MCS14                   OfdmRate3MbpsBW5MHz		//equivalent to 117Mbps
+		MCS15                   OfdmRate4_5MbpsBW5MHz		//equivalent to 130Mbps
+
+Aditionally, wifi-mac.cc has been modified commenting several lines in order to edit directly from the script some mac parameters such us RIFS, SIFS, PIFS, AckTimeout and SlotTime. The patch responsible of this changes is "wild.patch"
+
+
+WiMAX Module (src/wimax)
+
+The WiMAX Modules has not been updated since 2008 and all seems that the development has been frozen. There are still many unfixed bugs posted in nsnam Bugzilla [5] and many comments about wrong behaviours the ns-3-users [6] forum. Distance effects are not well performed in the module, however for test some basic parameters such as throughput and latency, the module works. In order to fix partially the module, some changes are proposed in "wimax.patch".
+
+*There is a problem with the fragmentation mechanism. For this reason fragmentation has been disabled in bs-scheduler.cc.	
+
+* Bad trace file. There is wrong trace table in src/wimax/model/default-traces.h, which 	would correspond with 16 QAM 3/4. New traces are provided in order to get decent results.
+	
+* There is a bad time conversion (Milliseconds to Seconds) in simple-ofdm-wimax-phy.cc.
+
+* In the file ss-net-device.cc, some assert messages NS_ASSERT_MSG are used without condition.
+
+
+Application Module (src/application)
+
+Additionally to these changes, the latency in the WiMAX script is calculated using a time stamp tag. For these reason additional changes in the applications module are necessary to adjust the OnOffApplication. The changes can be applied with "applications.patch" and a new wscript for build the module with the two new files is provided.
+
+
+
+
+5) About ns-3
+----------------
+
+ns-3 is a free open source project aiming to build a discrete-event
+network simulator targeted for simulation research and education.   
+This is a collaborative project; we hope that
+the missing pieces of the models we have not yet implemented
+will be contributed by the community in an open collaboration
+process.
+
+The process of contributing to the ns-3 project varies with
+the people involved, the amount of time they can invest
+and the type of model they want to work on, but the current
+process that the project tries to follow is described here:
+http://www.nsnam.org/developers/contributing-code/
+
+Note:  Much more substantial information about ns-3 can be found at
+http://www.nsnam.org
+
+
+6) References
+----------------
+
+[1] J. Simo-Reigadas, A. Martinez-Fernandez, J. Ramos-Lopez, and J. Seoane-Pascual, ''Modeling and optimizing ieee 802.11 DCF for long-distance links'', IEEE Transactions on Mobile Computing, Vol. 9, N. 6, 2010, pp 881--896.
+[2] IEEE 802.11: Wireless LAN Medium Access Control (MAC) and Physical Layer (PHY) Specifications, 2012 revision.
+[3] IEEE802.16-2009 IEEE 802.16 Standard: Local and Metropolitan Area Networks-Part 16, IEEE-SA, 2009 revision. 
+[5] Bugzilla https://www.nsnam.org/bugzilla/
+[6] ns-3-users https://groups.google.com/d/forum/ns-3-users
+
