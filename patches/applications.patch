@@ -1,0 +1,187 @@
+diff -rupN ns-allinone-3.22/ns-3.22/src/applications/model/onoff-application.cc ns-allinone-3.22-modified/ns-3.22/src/applications/model/onoff-application.cc
+--- ns-allinone-3.22/ns-3.22/src/applications/model/onoff-application.cc	2015-02-06 00:46:22.000000000 +0100
++++ ns-allinone-3.22-modified/ns-3.22/src/applications/model/onoff-application.cc	2015-04-20 13:11:34.020100133 +0200
+@@ -41,6 +41,7 @@
+ #include "ns3/udp-socket-factory.h"
+ #include "ns3/string.h"
+ #include "ns3/pointer.h"
++#include "ns3/timestamponoff.h"
+ 
+ namespace ns3 {
+ 
+@@ -271,6 +272,14 @@ void OnOffApplication::SendPacket ()
+ 
+   NS_ASSERT (m_sendEvent.IsExpired ());
+   Ptr<Packet> packet = Create<Packet> (m_pktSize);
++  
++  TimeStampOnOff tag;
++  tag.SetTimestamp (Simulator::Now());
++  packet->AddByteTag (tag);
++
++  //QosTag qos;
++  //qos.SetTid(m_ac);
++  //packet->AddPacketTag (qos); // Priority for WiFi, see src/devices/wifi/qos-tag.h
+   m_txTrace (packet);
+   m_socket->Send (packet);
+   m_totBytes += m_pktSize;
+diff -rupN ns-allinone-3.22/ns-3.22/src/applications/model/onoff-application.h ns-allinone-3.22-modified/ns-3.22/src/applications/model/onoff-application.h
+--- ns-allinone-3.22/ns-3.22/src/applications/model/onoff-application.h	2015-02-06 00:46:22.000000000 +0100
++++ ns-allinone-3.22-modified/ns-3.22/src/applications/model/onoff-application.h	2015-04-20 13:13:24.700101927 +0200
+@@ -149,6 +149,7 @@ private:
+   void SendPacket ();
+ 
+   Ptr<Socket>     m_socket;       //!< Associated socket
++  uint8_t 	  m_ac;           //!< Access Class
+   Address         m_peer;         //!< Peer address
+   bool            m_connected;    //!< True if connected
+   Ptr<RandomVariableStream>  m_onTime;       //!< rng for On Time
+diff -rupN ns-allinone-3.22/ns-3.22/src/applications/model/timestamponoff.cc ns-allinone-3.22-modified/ns-3.22/src/applications/model/timestamponoff.cc
+--- ns-allinone-3.22/ns-3.22/src/applications/model/timestamponoff.cc	1970-01-01 01:00:00.000000000 +0100
++++ ns-allinone-3.22-modified/ns-3.22/src/applications/model/timestamponoff.cc	2014-08-07 22:35:35.000000000 +0200
+@@ -0,0 +1,83 @@
++/* -*- Mode: C++; c-file-style: "gnu"; indent-tabs-mode:"nill"; -*- */
++/*
++ * Copyright (c) 2012 Amir Reda
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation;
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ * 
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ *Based on AeroRP 
++ *Authors: Dr/ Sherif Khatab <s.khattab@fci-cu.edu.eg>
++ *         Eng/ Amir mohamed Reda <amiralex32@gmail.com>
++*/
++
++#include "ns3/core-module.h"
++#include "ns3/timestamponoff.h"
++
++using namespace ns3;
++
++TypeId 
++TimeStampOnOff::GetTypeId (void)
++{
++  static TypeId tid = TypeId ("TimeStampOnOff")
++    .SetParent<Tag> ()
++    .AddConstructor<TimeStampOnOff> ()
++    .AddAttribute ("TimeStampOnOff",
++                   "Some momentous point in time!",
++                   EmptyAttributeValue (),
++                   MakeTimeAccessor (&TimeStampOnOff::GetTimestamp),
++                   MakeTimeChecker ())
++  ;
++  return tid;
++}
++TypeId 
++TimeStampOnOff::GetInstanceTypeId (void) const
++{
++  return GetTypeId ();
++}
++
++uint32_t 
++TimeStampOnOff::GetSerializedSize (void) const
++{
++  return 8;
++}
++void 
++TimeStampOnOff::Serialize (TagBuffer i) const
++{
++  int64_t t = m_timestamp.GetNanoSeconds ();
++  i.Write ((const uint8_t *)&t, 8);
++}
++void 
++TimeStampOnOff::Deserialize (TagBuffer i)
++{
++  int64_t t;
++  i.Read ((uint8_t *)&t, 8);
++  m_timestamp = NanoSeconds (t);
++}
++
++void
++TimeStampOnOff::SetTimestamp (Time time)
++{
++  m_timestamp = time;
++}
++Time
++TimeStampOnOff::GetTimestamp (void) const
++{
++  return m_timestamp;
++}
++
++void 
++TimeStampOnOff::Print (std::ostream &os) const
++{
++  os << "t=" << m_timestamp;
++}
++
+diff -rupN ns-allinone-3.22/ns-3.22/src/applications/model/timestamponoff.h ns-allinone-3.22-modified/ns-3.22/src/applications/model/timestamponoff.h
+--- ns-allinone-3.22/ns-3.22/src/applications/model/timestamponoff.h	1970-01-01 01:00:00.000000000 +0100
++++ ns-allinone-3.22-modified/ns-3.22/src/applications/model/timestamponoff.h	2014-08-07 22:36:33.000000000 +0200
+@@ -0,0 +1,59 @@
++/* -*- Mode: C++; c-file-style: "gnu"; indent-tabs-mode:"nill"; -*- */
++/*
++ * Copyright (c) 2012 Amir Reda
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation;
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ * 
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ *Based on AeroRP 
++ *Authors: Dr/ Sherif Khatab <s.khattab@fci-cu.edu.eg>
++ *         Eng/ Amir mohamed Reda <amiralex32@gmail.com>
++*/
++
++#ifndef TIME_STAMP_H
++#define TIME_STAMP_H
++
++#include "ns3/core-module.h"
++#include "ns3/type-id.h"
++#include "ns3/nstime.h"
++#include "ns3/tag.h"
++#include "ns3/tag-buffer.h"
++
++
++
++namespace ns3 {
++
++class TimeStampOnOff : public Tag {
++public:
++  static TypeId GetTypeId (void);
++  virtual TypeId GetInstanceTypeId (void) const;
++
++  virtual uint32_t GetSerializedSize (void) const;
++  virtual void Serialize (TagBuffer i) const;
++  virtual void Deserialize (TagBuffer i);
++
++  // these are our accessors to our tag structure
++  void SetTimestamp (Time time);
++  Time GetTimestamp (void) const;
++
++  void Print (std::ostream &os) const;
++
++private:
++  Time m_timestamp;
++
++  // end class Timestamp
++};
++
++};
++
++#endif /* TIME_STAMP_H*/

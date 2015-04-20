@@ -1,0 +1,33 @@
+
+****HOWTO USE****
+
+1) Get the source. 
+The file provided can be used or can be download from the official web page in older realeses section: 
+
+wget https://www.nsnam.org/release/ns-allinone-3.22.tar.bz2
+
+2) Untar the source in the selected directory.
+
+tar -xjvf ns-allinone-3.22.tar.bz2
+
+2) Copy scripts and files to the working directory:
+
+cp scripts/* ns-allinone-3.22/ns-3.22/scratch/
+cp patches/wscript_applications ns-allinone-3.22/ns-3.22/src/applications/wscript
+cp patches/* ns-allinone-3.22/ns-3.22/
+cd ns-allinone-3.22/ns-3.22
+
+3) Apply patches: 
+
+patch -p2 < wild.patch
+patch -p2 < wimax.patch
+patch -p2 < applications.patch
+
+4) Build and run:
+
+./waf configure
+./waf 
+./waf --run "scratch/basic-WiLD --mcs=0 --pSize=1300 --maxDist=5 --stepDist=5 --aggTh=0 --pcap=false"
+
+
+

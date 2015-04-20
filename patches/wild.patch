@@ -1,0 +1,131 @@
+diff -rupN ns-allinone-3.22/ns-3.22/src/wifi/model/wifi-mac.cc ns-allinone-3.22-modified/ns-3.22/src/wifi/model/wifi-mac.cc
+--- ns-allinone-3.22/ns-3.22/src/wifi/model/wifi-mac.cc	2015-02-06 00:46:22.000000000 +0100
++++ ns-allinone-3.22-modified/ns-3.22/src/wifi/model/wifi-mac.cc	2015-04-20 17:58:37.876196509 +0200
+@@ -337,13 +337,13 @@ WifiMac::Configure80211b (void)
+ void
+ WifiMac::Configure80211g (void)
+ {
+-  SetSifs (MicroSeconds (10));
++  //SetSifs (MicroSeconds (10));
+   // Note no support for Short Slot Time as yet
+-  SetSlot (MicroSeconds (20));
+-  SetEifsNoDifs (MicroSeconds (10 + 304));
+-  SetPifs (MicroSeconds (10 + 20));
+-  SetCtsTimeout (MicroSeconds (10 + 304 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
+-  SetAckTimeout (MicroSeconds (10 + 304 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
++  //SetSlot (MicroSeconds (20));
++  //SetEifsNoDifs (MicroSeconds (10 + 304));
++  //SetPifs (MicroSeconds (10 + 20));
++  //SetCtsTimeout (MicroSeconds (10 + 304 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
++  //SetAckTimeout (MicroSeconds (10 + 304 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
+ }
+ 
+ void
+@@ -373,8 +373,8 @@ WifiMac::Configure80211n_2_4Ghz (void)
+ {
+   Configure80211g ();
+   SetRifs(MicroSeconds (2));
+-  SetCtsTimeout (MicroSeconds (10 + 52 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
+-  SetAckTimeout (MicroSeconds (10 + 52 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
++  //SetCtsTimeout (MicroSeconds (10 + 52 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
++  //SetAckTimeout (MicroSeconds (10 + 52 + 20 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
+   SetBasicBlockAckTimeout (GetSifs () + GetSlot () + GetDefaultBasicBlockAckDelay () + GetDefaultMaxPropagationDelay () * 2);
+   SetCompressedBlockAckTimeout (GetSifs () + GetSlot () + GetDefaultCompressedBlockAckDelay () + GetDefaultMaxPropagationDelay () * 2);
+ }
+diff -rupN ns-allinone-3.22/ns-3.22/src/wifi/model/wifi-phy.cc ns-allinone-3.22-modified/ns-3.22/src/wifi/model/wifi-phy.cc
+--- ns-allinone-3.22/ns-3.22/src/wifi/model/wifi-phy.cc	2015-02-06 00:46:22.000000000 +0100
++++ ns-allinone-3.22-modified/ns-3.22/src/wifi/model/wifi-phy.cc	2015-04-20 18:03:21.752201113 +0200
+@@ -1016,12 +1016,19 @@ WifiMode
+ WifiPhy::GetOfdmRate1_5MbpsBW5MHz ()
+ {
+   static WifiMode mode =
+-    WifiModeFactory::CreateWifiMode ("OfdmRate1_5MbpsBW5MHz",
++    /*WifiModeFactory::CreateWifiMode ("OfdmRate1_5MbpsBW5MHz",
+                                      WIFI_MOD_CLASS_OFDM,
+                                      true,
+                                      5000000, 1500000,
+                                      WIFI_CODE_RATE_1_2,
+-                                     2);
++                                     2);*/
++      WifiModeFactory::CreateWifiMode ("OfdmRate1_5MbpsBW5MHz",
++    		  	  	     WIFI_MOD_CLASS_HT,
++		                     true,
++		                     20000000, 78500000,
++		                     WIFI_CODE_RATE_3_4,
++		                     16);
++
+   return mode;
+ }
+ 
+@@ -1029,12 +1036,18 @@ WifiMode
+ WifiPhy::GetOfdmRate2_25MbpsBW5MHz ()
+ {
+   static WifiMode mode =
+-    WifiModeFactory::CreateWifiMode ("OfdmRate2_25MbpsBW5MHz",
++    /*WifiModeFactory::CreateWifiMode ("OfdmRate2_25MbpsBW5MHz",
+                                      WIFI_MOD_CLASS_OFDM,
+                                      false,
+                                      5000000, 2250000,
+                                      WIFI_CODE_RATE_3_4,
+-                                     2);
++                                     2);*/
++        WifiModeFactory::CreateWifiMode ("OfdmRate2_25MbpsBW5MHz",
++					WIFI_MOD_CLASS_HT,
++		  		        true,
++		  		        20000000, 104000000,
++		  		        WIFI_CODE_RATE_2_3,
++		  		        64);
+   return mode;
+ }
+ 
+@@ -1042,12 +1055,18 @@ WifiMode
+ WifiPhy::GetOfdmRate3MbpsBW5MHz ()
+ {
+   static WifiMode mode =
+-    WifiModeFactory::CreateWifiMode ("OfdmRate3MbpsBW5MHz",
++   /* WifiModeFactory::CreateWifiMode ("OfdmRate3MbpsBW5MHz",
+                                      WIFI_MOD_CLASS_OFDM,
+                                      true,
+                                      5000000, 3000000,
+                                      WIFI_CODE_RATE_1_2,
+-                                     4);
++                                     4);*/
++        WifiModeFactory::CreateWifiMode ("OfdmRate3MbpsBW5MHz",
++				  	WIFI_MOD_CLASS_HT,
++		  		  	true,
++		  		  	20000000, 117000000,
++		  		  	WIFI_CODE_RATE_3_4,
++		  		  	64);
+   return mode;
+ }
+ 
+@@ -1055,12 +1074,18 @@ WifiMode
+ WifiPhy::GetOfdmRate4_5MbpsBW5MHz ()
+ {
+   static WifiMode mode =
+-    WifiModeFactory::CreateWifiMode ("OfdmRate4_5MbpsBW5MHz",
++    /*WifiModeFactory::CreateWifiMode ("OfdmRate4_5MbpsBW5MHz",
+                                      WIFI_MOD_CLASS_OFDM,
+                                      false,
+                                      5000000, 4500000,
+                                      WIFI_CODE_RATE_3_4,
+-                                     4);
++                                     4);*/
++        WifiModeFactory::CreateWifiMode ("OfdmRate4_5MbpsBW5MHz",
++				  	WIFI_MOD_CLASS_HT,
++		  		  	true,
++		  		  	20000000, 130000000,
++		  		  	WIFI_CODE_RATE_5_6,
++		  		  	64);        
+   return mode;
+ }
+ 
+@@ -1295,7 +1320,7 @@ WifiPhy::GetOfdmRate65MbpsBW20MHzShGi ()
+                                      WIFI_MOD_CLASS_HT,
+                                      false,
+                                      20000000, 65000000,
+-                                     WIFI_CODE_RATE_3_4,
++                                     WIFI_CODE_RATE_5_6,
+                                      64);
+   return mode;
+ }
